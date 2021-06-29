@@ -20,7 +20,8 @@ from wisdem.ccblade.ccblade import CCBlade, CCAirfoil
 
 import pickle
 
-thrust_psd = pickle.load( open( "/Users/dzalkind/Tools/RAFT/designs/rotors/thrust_psd.p", "rb" ) )
+if False:
+    thrust_psd = pickle.load( open( "/Users/dzalkind/Tools/RAFT/designs/rotors/thrust_psd.p", "rb" ) )
 
 '''
 try:
@@ -535,8 +536,8 @@ class Rotor:
             P2 = np.matmul(R_ptfm, P2) + np.array(r_ptfm)[:,None]
           
             # drawing airfoils                            
-            for ii in range(m-1):
-                ax.plot(P2[0, npts*ii:npts*(ii+1)], P2[1, npts*ii:npts*(ii+1)], P2[2, npts*ii:npts*(ii+1)])  
+            #for ii in range(m-1):
+            #    ax.plot(P2[0, npts*ii:npts*(ii+1)], P2[1, npts*ii:npts*(ii+1)], P2[2, npts*ii:npts*(ii+1)])  
             # draw outline
             ax.plot(P2[0, 0:-1:npts], P2[1, 0:-1:npts], P2[2, 0:-1:npts], 'k') # leading edge  
             ax.plot(P2[0, 2:-1:npts], P2[1, 2:-1:npts], P2[2, 2:-1:npts], 'k')  # trailing edge
@@ -554,6 +555,10 @@ class Rotor:
         R = self.R_rot
         V_ref = case['wind_speed']
         
+        ###### Initialize IEC Wind parameters #######
+        iec_wind = pyIECWind_extreme()
+        iec_wind.z_hub = HH
+        
         if isinstance(case['turbulence'],str):
             # If a string, the options are I, II, III, IV
             Class = ''
@@ -567,23 +572,21 @@ class Rotor:
                 raise Exception("Turbulence class must start with I, II, III, or IV, while you wrote " + case['turbulence'])
             else:
                 Categ = char
+                iec_wind.Turbulence_Class = Categ
 
             try:
                 TurbMod = case['turbulence'].split('_')[1]
             except:
                 raise Exception("Error reading the turbulence model. You wrote " + case['turbulence'])
 
-
-        ###### Initialize IEC Wind parameters #######
-        iec_wind = pyIECWind_extreme()
-        iec_wind.z_hub = HH
-        iec_wind.Turbine_Class = Class
-        iec_wind.Turbulence_Class = Categ
+            iec_wind.Turbine_Class = Class
+        
+        # set things up (use default values if not specified in the above)
         iec_wind.setup()
         
         # Can set iec_wind.I_ref here if wanted, NTM used then
         if isinstance(case['turbulence'],float):
-            iec_wind.I_ref = case['turbulence']
+            iec_wind.I_ref = case['turbulence']    # this overwrites the value set in setup method
             TurbMod = 'NTM'
 
         # Compute wind turbulence standard deviation (invariant with height)
