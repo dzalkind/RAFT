@@ -453,24 +453,29 @@ class Rotor:
         T_w1 = dT_dU * V_w
         T_w2 = (E * C * V_w) / (1j * self.w)
 
-        T_ext = T_w1 + T_w2
+        # External thrust force. Excluding control term for now
+        T_ext = T_w1 #- T_w2
 
-        # print('here')
+        # Check thrust PSD from openfast vs. calculated
         if False:
-            plt.plot(self.w, V_w, label = 'S_rot')
+            # plt.plot(self.w, V_w, label = 'S_rot')
             plt.yscale('log')
             plt.xscale('log')
 
             plt.xlim([1e-2,10])
             plt.grid('True')
 
-            plt.xlabel('Freq. (Hz)')
-            plt.ylabel('PSD')
+            plt.xlabel('Freq. (rad/s)')
+            plt.ylabel('Thrust Spectrum (N)')
 
 
-            plt.plot(thrust_psd.fq_0 * 2 * np.pi,thrust_psd.psd_0)
-            plt.plot(self.w, np.abs(T_ext))
+            plt.plot(thrust_psd.fq_2 * 2 * np.pi,np.sqrt(thrust_psd.psd_2) * 1000,label='openfast')
+            plt.plot(self.w, np.abs(T_w1),label='T_v V(\omega)')
+            # plt.plot(self.w, np.abs(T_w2))
+            plt.plot(self.w, np.abs(T_ext),label='T_v V(\omega) - E(\omega)C(\omega)V(\omega)/j\omega')
             # plt.plot(self.w, abs(T_w2))
+
+            plt.legend()
 
             plt.show()
 
